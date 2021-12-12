@@ -1,0 +1,45 @@
+﻿  Building Custom Rule C:/Users/Aurore/source/repos/ProjetTSI/tools/CMakeLists.txt
+  mesh_io_obj.cpp
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\../mesh.hpp(14,1): warning C4099: 'mesh' : nom de type déjà rencontré avec 'class' et utilisant maintenant 'struct'
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\../mesh.hpp(13): message : voir la déclaration de 'mesh'
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(99,5): warning C4267: 'initialisation' : conversion de 'size_t' en 'int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(102,40): warning C4267: 'initialisation' : conversion de 'size_t' en 'int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(102,40): warning C4267: 'initialisation' : conversion de 'size_t' en 'const int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(196,51): warning C4267: 'initialisation' : conversion de 'size_t' en 'int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(196,51): warning C4267: 'initialisation' : conversion de 'size_t' en 'const int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(200,37): warning C4267: 'initialisation' : conversion de 'size_t' en 'int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(200,37): warning C4267: 'initialisation' : conversion de 'size_t' en 'const int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(207,48): warning C4267: 'initialisation' : conversion de 'size_t' en 'int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(207,48): warning C4267: 'initialisation' : conversion de 'size_t' en 'const int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(221,51): warning C4267: 'initialisation' : conversion de 'size_t' en 'int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(221,51): warning C4267: 'initialisation' : conversion de 'size_t' en 'const int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(228,41): warning C4267: 'initialisation' : conversion de 'size_t' en 'int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_obj.cpp(228,41): warning C4267: 'initialisation' : conversion de 'size_t' en 'const int', perte possible de données
+  mesh_io_off.cpp
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\../mesh.hpp(14,1): warning C4099: 'mesh' : nom de type déjà rencontré avec 'class' et utilisant maintenant 'struct'
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\../mesh.hpp(13): message : voir la déclaration de 'mesh'
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_off.cpp(96,5): warning C4267: 'initialisation' : conversion de 'size_t' en 'int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format\mesh_io_off.cpp(104,5): warning C4267: 'initialisation' : conversion de 'size_t' en 'int', perte possible de données
+  glhelper.cpp
+C:\Users\Aurore\source\repos\ProjetTSI\tools\glhelper.cpp(143,86): warning C4996: 'localtime': This function or variable may be unsafe. Consider using localtime_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  mat4.cpp
+  mesh.cpp
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format/mesh_io_obj.hpp(28,11): warning C4099: 'mesh' : nom de type déjà rencontré avec 'struct' et utilisant maintenant 'class'
+C:\Users\Aurore\source\repos\ProjetTSI\tools\mesh.hpp(13): message : voir la déclaration de 'mesh'
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format/mesh_io_off.hpp(26,11): warning C4099: 'mesh' : nom de type déjà rencontré avec 'struct' et utilisant maintenant 'class'
+C:\Users\Aurore\source\repos\ProjetTSI\tools\format/mesh_io_obj.hpp(28): message : voir la déclaration de 'mesh'
+C:\Users\Aurore\source\repos\ProjetTSI\tools\mesh.cpp(38,3): warning C4267: 'initialisation' : conversion de 'size_t' en 'unsigned int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\mesh.cpp(49,3): warning C4267: 'initialisation' : conversion de 'size_t' en 'unsigned int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\mesh.cpp(64,3): warning C4267: 'initialisation' : conversion de 'size_t' en 'unsigned int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\mesh.cpp(78,3): warning C4267: 'initialisation' : conversion de 'size_t' en 'unsigned int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\mesh.cpp(83,3): warning C4267: 'initialisation' : conversion de 'size_t' en 'unsigned int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\mesh.cpp(92,3): warning C4267: 'initialisation' : conversion de 'size_t' en 'unsigned int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\mesh.cpp(101,3): warning C4267: 'initialisation' : conversion de 'size_t' en 'unsigned int', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\tools\mesh.cpp(110,3): warning C4267: 'initialisation' : conversion de 'size_t' en 'unsigned int', perte possible de données
+  tga.cpp
+  triangle_index.cpp
+  vec2.cpp
+  vec3.cpp
+  vertex_opengl.cpp
+  Génération de code en cours...
+  tools.vcxproj -> C:\Users\Aurore\source\repos\ProjetTSI\build\tools\Debug\tools.lib

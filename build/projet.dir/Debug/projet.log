@@ -1,0 +1,9 @@
+﻿  main.cpp
+C:\Users\Aurore\source\repos\ProjetTSI\src\main.cpp(30,74): warning C4305: 'argument' : troncation de 'double' à 'float'
+C:\Users\Aurore\source\repos\ProjetTSI\src\main.cpp(43,46): warning C4305: 'argument' : troncation de 'double' à 'float'
+C:\Users\Aurore\source\repos\ProjetTSI\src\main.cpp(44,41): warning C4305: 'argument' : troncation de 'double' à 'float'
+C:\Users\Aurore\source\repos\ProjetTSI\src\main.cpp(300,45): warning C4267: '=' : conversion de 'size_t' en 'GLuint', perte possible de données
+C:\Users\Aurore\source\repos\ProjetTSI\src\main.cpp(370,65): warning C4305: 'argument' : troncation de 'double' à 'float'
+C:\Users\Aurore\source\repos\ProjetTSI\src\main.cpp(371,60): warning C4305: 'argument' : troncation de 'double' à 'float'
+C:\Users\Aurore\source\repos\ProjetTSI\src\main.cpp(379,45): warning C4267: '=' : conversion de 'size_t' en 'GLuint', perte possible de données
+  projet.vcxproj -> C:\Users\Aurore\source\repos\ProjetTSI\build\Debug\projet.exe

@@ -1,0 +1,12 @@
+C:/Users/Aurore/source/repos/ProjetTSI/build/CMakeFiles/projet.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/CMakeFiles/INSTALL.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/extern/glew/CMakeFiles/libglew_static.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/extern/glew/CMakeFiles/INSTALL.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/extern/glew/CMakeFiles/ALL_BUILD.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/extern/freeglut/CMakeFiles/freeglut_static.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/extern/freeglut/CMakeFiles/INSTALL.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/extern/freeglut/CMakeFiles/ALL_BUILD.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/tools/CMakeFiles/tools.dir
+C:/Users/Aurore/source/repos/ProjetTSI/build/tools/CMakeFiles/INSTALL.dir
