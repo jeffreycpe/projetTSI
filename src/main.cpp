@@ -20,6 +20,11 @@ const int nb_text = 2;
 text text_to_draw[nb_text];
 
 
+bool flecheHaut = false;
+bool flecheBas = false;
+bool flecheDroite = false;
+bool flecheGauche = false;
+
 /*****************************************************************************\
 * initialisation                                                              *
 \*****************************************************************************/
@@ -28,10 +33,10 @@ static void init()
   shader_program_id = glhelper::create_program_from_file("shaders/shader.vert", "shaders/shader.frag"); CHECK_GL_ERROR();
 
   cam.projection = matrice_projection(60.0f*M_PI/180.0f,1.0f,0.01f,100.0f);
-  cam.tr.translation = vec3(0.0f, 1.0f, 0.0f);
-  // cam.tr.translation = vec3(0.0f, 20.0f, 0.0f);
-  // cam.tr.rotation_center = vec3(0.0f, 20.0f, 0.0f);
-  // cam.tr.rotation_euler = vec3(M_PI/2., 0.0f, 0.0f);
+  // cam.tr.translation = vec3(0.0f, 1.0f, 0.0f);
+  cam.tr.translation = vec3(0.0f, 20.0f, 0.0f);
+  cam.tr.rotation_center = vec3(0.0f, 20.0f, 0.0f);
+  cam.tr.rotation_euler = vec3(M_PI/2., 0.0f, 0.0f);
 
   init_model_1();
   init_model_2();
@@ -39,16 +44,16 @@ static void init()
 
   gui_program_id = glhelper::create_program_from_file("shaders/gui.vert", "shaders/gui.frag"); CHECK_GL_ERROR();
 
-  text_to_draw[0].value = "AURORE";
-  text_to_draw[0].bottomLeft = vec2(-0.2, 0.5);
-  text_to_draw[0].topRight = vec2(0.2, 1);
-  init_text(text_to_draw);
+  // text_to_draw[0].value = "AURORE";
+  // text_to_draw[0].bottomLeft = vec2(-0.2, 0.5);
+  // text_to_draw[0].topRight = vec2(0.2, 1);
+  // init_text(text_to_draw);
 
-  text_to_draw[1]=text_to_draw[0];
-  text_to_draw[1].value = "IS THE BEST";
-  text_to_draw[1].bottomLeft.y = 0.0f;
-  text_to_draw[1].topRight.y = 0.5f;
-}
+//   text_to_draw[1]=text_to_draw[0];
+//   text_to_draw[1].value = "IS THE BEST";
+//   text_to_draw[1].bottomLeft.y = 0.0f;
+//   text_to_draw[1].topRight.y = 0.5f;
+  }
 
 /*****************************************************************************\
 * display_callback                                                           *
@@ -90,6 +95,42 @@ static void keyboard_callback(unsigned char key, int, int)
 \*****************************************************************************/
 static void special_callback(int key, int, int)
 {
+switch (key)
+  {
+    case GLUT_KEY_UP:
+      flecheHaut = true; //rotation avec la touche du haut
+      break;
+    case GLUT_KEY_DOWN:
+      flecheBas = true; //rotation avec la touche du bas
+      break;
+    case GLUT_KEY_LEFT:
+      flecheGauche = true; //rotation avec la touche de gauche
+      break;
+    case GLUT_KEY_RIGHT:
+      flecheDroite = true; //rotation avec la touche de droite
+      break;
+  }
+}
+
+static void special_up_callback(int key, int,int)
+{
+  float dL=0.01f;
+  
+  switch (key)
+  {
+    case GLUT_KEY_UP:
+      flecheHaut = false; //rotation avec la touche du haut
+      break;
+    case GLUT_KEY_DOWN:
+      flecheBas = false; //rotation avec la touche du bas
+      break;
+    case GLUT_KEY_LEFT:
+      flecheGauche = false; //rotation avec la touche de gauche
+      break;
+    case GLUT_KEY_RIGHT:
+      flecheDroite = false; //rotation avec la touche de droite
+      break;
+  }
 }
 
 
@@ -98,7 +139,32 @@ static void special_callback(int key, int, int)
 \*****************************************************************************/
 static void timer_callback(int)
 {
+
+  float dL=0.1f;
+  vec3 t = obj[0].tr.translation;
+
+  if(flecheHaut == true)
+    t.z-=dL;
+
+  if(flecheBas == true)
+    t.z+=dL;
+
+  if(flecheGauche == true)
+    t.x-=dL;
+
+  if(flecheDroite == true)
+    t.x+=dL;
+
+  if(norm(t - obj[2].tr.translation) > 0.8)
+    obj[0].tr.translation = t;
+
+
+  //demande de rappel de cette fonction dans 25ms
   glutTimerFunc(25, timer_callback, 0);
+
+  std::cout << norm(obj[0].tr.translation - obj[2].tr.translation) << std::endl;
+
+  glutSpecialFunc(special_callback);
   glutPostRedisplay();
 }
 
@@ -113,6 +179,11 @@ int main(int argc, char** argv)
   glutCreateWindow("OpenGL");
 
   glutDisplayFunc(display_callback);
+  glutSpecialUpFunc(special_up_callback);
+
+
+
+
   glutKeyboardFunc(keyboard_callback);
   glutSpecialFunc(special_callback);
   glutTimerFunc(25, timer_callback, 0);
@@ -243,7 +314,7 @@ void init_text(text *t){
 
   t->texture_id = glhelper::load_texture("data/fontB.tga");
 
-  t->visible = true;
+  t->visible = false;
   t->prog = gui_program_id;
 }
 
