@@ -6,7 +6,7 @@
  \*****************************************************************************/
 
 #include "declaration.h"
-
+#include <math.h>       
 //identifiant des shaders
 GLuint shader_program_id;
 GLuint gui_program_id;
@@ -24,6 +24,12 @@ bool flecheHaut = false;
 bool flecheBas = false;
 bool flecheDroite = false;
 bool flecheGauche = false;
+bool doitSauter = false;
+bool sautEnCours = false;
+
+float abscisse;
+float compteurSaut = 0;
+
 
 /*****************************************************************************\
 * initialisation                                                              *
@@ -34,9 +40,12 @@ static void init()
 
   cam.projection = matrice_projection(60.0f*M_PI/180.0f,1.0f,0.01f,100.0f);
   // cam.tr.translation = vec3(0.0f, 1.0f, 0.0f);
-  cam.tr.translation = vec3(0.0f, 20.0f, 0.0f);
-  cam.tr.rotation_center = vec3(0.0f, 20.0f, 0.0f);
-  cam.tr.rotation_euler = vec3(M_PI/2., 0.0f, 0.0f);
+  //cam.tr.translation = vec3(0.0f, 20.0f, 0.0f);
+ // cam.tr.rotation_center = vec3(0.0f, 20.0f, 0.0f);
+  //cam.tr.rotation_euler = vec3(M_PI/2, 0.0f, 0.0f);
+  cam.tr.translation = obj[0].tr.translation;
+  
+
 
   init_model_1();
   init_model_2();
@@ -77,18 +86,57 @@ static void init()
 \*****************************************************************************/
 static void keyboard_callback(unsigned char key, int, int)
 {
+   
   switch (key)
   {
+      
     case 'p':
       glhelper::print_screen();
       break;
     case 'a':
+        break;
     case 'A':
+        break;
+    case 'q':
+        cam.tr.rotation_euler.y += -0.05 * M_PI;
+        //std::cout << "cocuo" << std::endl;
+        break;
+    case 'd':
+        cam.tr.rotation_euler.y += 0.05 * M_PI;
+        break;
+    case ' ':
+        
+        if (!sautEnCours) {
+            compteurSaut = 0;
+            sautEnCours = true;
+            doitSauter = true;
+        }
+            
+        break;
     case 27:
       exit(0);
       break;
   }
 }
+
+
+/*
+Faire bouger la sourie
+*/
+static void mouse_motion(int x, int y) {
+
+    int viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    abscisse = (static_cast<float>(x) / viewport[2]);
+    abscisse -= 0.5;
+    abscisse *= 2;
+    std::cout <<"x "<< abscisse  << std::endl;
+    
+    
+    //std::cout << viewport[2] << std::endl;
+}
+
 
 /*****************************************************************************\
 * special_callback                                                            *
@@ -114,8 +162,10 @@ switch (key)
 
 static void special_up_callback(int key, int,int)
 {
-  float dL=0.01f;
-  
+    
+
+
+
   switch (key)
   {
     case GLUT_KEY_UP:
@@ -139,33 +189,112 @@ static void special_up_callback(int key, int,int)
 \*****************************************************************************/
 static void timer_callback(int)
 {
-
+  cam.tr.rotation_center = obj[0].tr.translation;
   float dL=0.1f;
+  
   vec3 t = obj[0].tr.translation;
+  vec3 suiviCamera = obj[0].tr.translation;
+  vec2 vectDeplacement = vec2(dL * cos(cam.tr.rotation_euler.y), dL * sin(cam.tr.rotation_euler.y));
+  //Mouvement du personnage
 
-  if(flecheHaut == true)
-    t.z-=dL;
+  if (flecheHaut == true) {
+      t.z -= vectDeplacement.x;
+      t.x += vectDeplacement.y;
+      if (flecheDroite == true) {
+          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + 3* M_PI/4;
+          t.z += vectDeplacement.y;
+          t.x += vectDeplacement.x;
+      }
+      else if(flecheGauche == true) {
+          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y -3*M_PI / 4;
+          t.z -= vectDeplacement.y;
+          t.x -= vectDeplacement.x;
+      }
+      else {
+          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + M_PI;
+      }
+      
+  }
+    
 
-  if(flecheBas == true)
-    t.z+=dL;
+  if (flecheBas == true) {
+      t.z += vectDeplacement.x;
+      t.x -= vectDeplacement.y;
+      if (flecheDroite == true) {
+          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + M_PI / 4;
+          t.z += vectDeplacement.y;
+          t.x += vectDeplacement.x;
+      }
+      else if (flecheGauche == true) {
+          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y  -  M_PI / 4;
+          t.z -= vectDeplacement.y;
+          t.x -= vectDeplacement.x;
+      }
+      else {
+          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y;
+      }
+  }
+    
 
-  if(flecheGauche == true)
-    t.x-=dL;
+  if (flecheGauche == true && flecheHaut == false && flecheBas == false) {
+      
+      t.z -= vectDeplacement.y;
+      t.x -= vectDeplacement.x;
+      obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y  -M_PI/2 ;
+  }
+    
 
-  if(flecheDroite == true)
-    t.x+=dL;
+    if (flecheDroite == true && flecheHaut==false && flecheBas == false) {
+        t.z += vectDeplacement.y;
+        t.x += vectDeplacement.x;
+        obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + M_PI / 2;
+  }
+    
 
   if(norm(t - obj[2].tr.translation) > 0.8)
     obj[0].tr.translation = t;
 
+  suiviCamera.z += 6;
+  suiviCamera.y += 1;
 
+
+  cam.tr.translation = suiviCamera;
+
+  /////////////////////////////////////////////
+  //SAUT
+  ////////////////////////////////////////
+
+  if (doitSauter) {
+      std::cout << compteurSaut<< std::endl;
+      obj[0].tr.translation.y = -0.5 * 9.8 * compteurSaut * compteurSaut + 5 * compteurSaut;
+      if (obj[0].tr.translation.y - obj[1].tr.translation.y < 0) {
+          obj[0].tr.translation.y = 0;
+          sautEnCours = false;
+          doitSauter = false;
+
+
+      }
+  }
+
+
+
+
+  //cam.tr.rotation_euler = obj[0].tr.rotation_euler;  pour suivre perso
+
+ 
+  //cam.tr.rotation_euler = suiviCameraRotation ;
   //demande de rappel de cette fonction dans 25ms
   glutTimerFunc(25, timer_callback, 0);
 
-  std::cout << norm(obj[0].tr.translation - obj[2].tr.translation) << std::endl;
+  //std::cout << obj[0].tr.translation.y - obj[1].tr.translation.y << std::endl;
+  //std::cout << norm(obj[0].tr.translation - obj[2].tr.translation) << std::endl;
+
+
 
   glutSpecialFunc(special_callback);
   glutPostRedisplay();
+
+  compteurSaut += 0.025;
 }
 
 /*****************************************************************************\
@@ -183,7 +312,7 @@ int main(int argc, char** argv)
 
 
 
-
+  glutMotionFunc(mouse_motion);
   glutKeyboardFunc(keyboard_callback);
   glutSpecialFunc(special_callback);
   glutTimerFunc(25, timer_callback, 0);
@@ -350,10 +479,10 @@ GLuint upload_mesh_to_gpu(const mesh& m)
 void init_model_1()
 {
   // Chargement d'un maillage a partir d'un fichier
-  mesh m = load_obj_file("data/stegosaurus.obj");
+  mesh m = load_obj_file("data/source/sorcier/magicien.obj");
 
   // Affecte une transformation sur les sommets du maillage
-  float s = 0.2f;
+  float s = 0.8f;
   mat4 transform = mat4(   s, 0.0f, 0.0f, 0.0f,
       0.0f,    s, 0.0f, 0.0f,
       0.0f, 0.0f,   s , 0.0f,
@@ -369,11 +498,13 @@ void init_model_1()
   obj[0].vao = upload_mesh_to_gpu(m);
 
   obj[0].nb_triangle = m.connectivity.size();
-  obj[0].texture_id = glhelper::load_texture("data/stegosaurus.tga");
+  obj[0].texture_id = glhelper::load_texture("data/source/sorcier/color_baseColor.tga");
   obj[0].visible = true;
   obj[0].prog = shader_program_id;
 
-  obj[0].tr.translation = vec3(-2.0, 0.0, -10.0);
+  obj[0].tr.translation = vec3(-2.0, 0.000, -10.0);
+
+  obj[0].tr.rotation_euler = vec3(0.0f, 0.0f , 0.0f);
 }
 
 void init_model_2()
@@ -382,10 +513,10 @@ void init_model_2()
   mesh m;
 
   //coordonnees geometriques des sommets
-  vec3 p0=vec3(-25.0f,0.0f,-25.0f);
-  vec3 p1=vec3( 25.0f,0.0f,-25.0f);
-  vec3 p2=vec3( 25.0f,0.0f, 25.0f);
-  vec3 p3=vec3(-25.0f,0.0f, 25.0f);
+  vec3 p0=vec3(-250.0f,0.0f,-250.0f);
+  vec3 p1=vec3( 250.0f,0.0f,-250.0f);
+  vec3 p2=vec3( 25.00f,0.0f, 250.0f);
+  vec3 p3=vec3(-250.0f,0.0f, 250.0f);
 
   //normales pour chaque sommet
   vec3 n0=vec3(0.0f,1.0f,0.0f);
@@ -420,7 +551,7 @@ void init_model_2()
   obj[1].nb_triangle = 2;
   obj[1].vao = upload_mesh_to_gpu(m);
 
-  obj[1].texture_id = glhelper::load_texture("data/grass.tga");
+  obj[1].texture_id = glhelper::load_texture("data/green.png");
 
   obj[1].visible = true;
   obj[1].prog = shader_program_id;
@@ -430,17 +561,20 @@ void init_model_2()
 void init_model_3()
 {
   // Chargement d'un maillage a partir d'un fichier
-  mesh m = load_off_file("data/armadillo_light.off");
+    mesh m = load_obj_file("data/Dementor.obj");
 
   // Affecte une transformation sur les sommets du maillage
-  float s = 0.01f;
+  float s = 0.015f;
   mat4 transform = mat4(   s, 0.0f, 0.0f, 0.0f,
       0.0f,    s, 0.0f, 0.50f,
       0.0f, 0.0f,   s , 0.0f,
       0.0f, 0.0f, 0.0f, 1.0f);
-  apply_deformation(&m,matrice_rotation(M_PI/2.0f,1.0f,0.0f,0.0f));
-  apply_deformation(&m,matrice_rotation(M_PI,0.0f,1.0f,0.0f));
+  //apply_deformation(&m,matrice_rotation(M_PI/2.0f,1.0f,0.0f,0.0f));
+  //apply_deformation(&m,matrice_rotation(M_PI,0.0f,1.0f,0.0f));
   apply_deformation(&m,transform);
+
+
+  obj[2].tr.rotation_center = vec3(0.0f, 0.0f, 0.0f);
 
   update_normals(&m);
   fill_color(&m,vec3(1.0f,1.0f,1.0f));
@@ -448,10 +582,12 @@ void init_model_3()
   obj[2].vao = upload_mesh_to_gpu(m);
 
   obj[2].nb_triangle = m.connectivity.size();
-  obj[2].texture_id = glhelper::load_texture("data/white.tga");
+  obj[2].texture_id = glhelper::load_texture("data/textures/Tex_0075_0.png");
 
   obj[2].visible = true;
   obj[2].prog = shader_program_id;
 
-  obj[2].tr.translation = vec3(2.0, 0.0, -10.0);
+  obj[2].tr.translation = vec3(2.5, 1.5, -10.0);
+
+
 }
