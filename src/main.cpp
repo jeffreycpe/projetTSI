@@ -7,29 +7,54 @@
 
 #include "declaration.h"
 #include <math.h>       
+#include <cstdlib>
 //identifiant des shaders
 GLuint shader_program_id;
 GLuint gui_program_id;
 
 camera cam;
 
-const int nb_obj = 3;
+
+//nombre objet
+const int longueur = 500;
+const int carre = 50;
+const int nombreArbres = (longueur * longueur) / (carre * carre); //nombres d'arbres + de monstre
+const int nb_obj = nombreArbres +3; //objets + magicien + sol + triangle de sortilège 
 objet3d obj[nb_obj];
 
+//création du texte
 const int nb_text = 2;
 text text_to_draw[nb_text];
 
-
+//activation du bouton de déplacement
 bool flecheHaut = false;
 bool flecheBas = false;
 bool flecheDroite = false;
 bool flecheGauche = false;
+
+//gestion du saut
 bool doitSauter = false;
 bool sautEnCours = false;
-
 float abscisse;
 float compteurSaut = 0;
 
+//tableau des objets
+int numDetraqueur[100];
+int numArbres[100];
+//tableaux de coordonnées de déplacement des monstres
+int depDetraqueurx[100];
+int depDetraqueury[100];
+int compteurDetra = 0;
+
+//gestion du sort
+int sort;
+bool sortEnCours = false;
+
+//autorisation de se deplacer
+bool autoriserDeplacement = true;
+
+//verification de la vie
+bool enVie = true;
 
 /*****************************************************************************\
 * initialisation                                                              *
@@ -44,16 +69,60 @@ static void init()
  // cam.tr.rotation_center = vec3(0.0f, 20.0f, 0.0f);
   //cam.tr.rotation_euler = vec3(M_PI/2, 0.0f, 0.0f);
   cam.tr.translation = obj[0].tr.translation;
+
+  //création du magicien et du sol
+  init_model_1();
+  init_model_2();
   
 
 
-  init_model_1();
-  init_model_2();
-  init_model_3();
 
+  //remplissage d'un tableau de coordonnées réparties uniformément sur le terrain indiquant la postion des objets 
+  vec2 coordonneeArbres[nombreArbres];
+  vec2 tabCoordArbres[nombreArbres];
+  vec2 tabCoordDetraqueurs[nombreArbres];
+  int i;
+  int j;
+  int k;
+
+  //boucle de remplissage du tableau des coordonnées 
+  for (i = 0; i < longueur/carre; ++i) {
+      for (j = 0; j < longueur/carre; ++j) {
+          coordonneeArbres[i * (longueur / carre) + j] = vec2(( - (longueur / 2) + (2 * i + 1) * (carre / 2)) + rand()%20 - 20, ( - (longueur / 2) + (2 * j + 1) * (carre / 2)) + rand() % 20 - 20);
+      }
+  }
+
+
+  j = 0;
+  k = 0;
+  //boucle d'attribution des coordonées à un abre ou à un monstre de manière aléatoire
+  for(i=0 ; i < nombreArbres ; i++){
+      if (rand() % 101 < 80) {
+          tabCoordArbres[k] = coordonneeArbres[i];
+          k++ ;    
+      }
+      else {
+          tabCoordDetraqueurs[j] = coordonneeArbres[i];
+          j++;   
+      }
+  }
+  int nbrDetraqueurs = j;
+  int nbrArbres = k;
+  k++;
+  j++;
+  //coordonnée 500 indique le dernier élement de la liste 
+  tabCoordArbres[k] = vec2(-500, -500);
+  tabCoordDetraqueurs[j] = vec2(-500, -500);
+  
+  //création des modèles monstres et arbres 
+  init_model_3(2, tabCoordDetraqueurs, nbrDetraqueurs);//création de tous les détraqueurs 
+  init_model_4(2+nbrDetraqueurs, tabCoordArbres, nbrArbres);//création des arbres
+  init_model_5(nombreArbres + 1); //création du triangle de sortilège 
+
+  //atribution des shaders
   gui_program_id = glhelper::create_program_from_file("shaders/gui.vert", "shaders/gui.frag"); CHECK_GL_ERROR();
 
-  // text_to_draw[0].value = "AURORE";
+  // text_to_draw[0].value = "";
   // text_to_draw[0].bottomLeft = vec2(-0.2, 0.5);
   // text_to_draw[0].topRight = vec2(0.2, 1);
   // init_text(text_to_draw);
@@ -72,11 +141,14 @@ static void init()
   glClearColor(0.5f, 0.6f, 0.9f, 1.0f); CHECK_GL_ERROR();
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CHECK_GL_ERROR();
 
-  for(int i = 0; i < nb_obj; ++i)
-    draw_obj3d(obj + i, cam);
+  //dsssiner objets 
+  for (int i = 0; i < nb_obj; ++i) {
+      draw_obj3d(obj + i, cam);
+  }
+    
 
-  for(int i = 0; i < nb_text; ++i)
-    draw_text(text_to_draw + i);
+  //for(int i = 0; i < nb_text; ++i)
+    //draw_text(text_to_draw + i);
 
   glutSwapBuffers();
 }
@@ -97,21 +169,26 @@ static void keyboard_callback(unsigned char key, int, int)
         break;
     case 'A':
         break;
-    case 'q':
+    case 'q': //rotation caméra à gauche
         cam.tr.rotation_euler.y += -0.05 * M_PI;
-        //std::cout << "cocuo" << std::endl;
         break;
-    case 'd':
+    case 'd'://rotation caméra à droite
         cam.tr.rotation_euler.y += 0.05 * M_PI;
         break;
-    case ' ':
+    case 'r'://bouton ressuciter 
+        if (enVie == false) {
+            obj[0].tr.translation = vec3(-2.0, 0.0f, -10.0);//on se remet à la coordonnée d'origine
+            obj[0].tr.rotation_euler = vec3(0.0f, 0.0f, 0.0f); //on se remet droit
+            enVie = true;
+        }
+        break;
+    case ' '://bouton de saut
         
-        if (!sautEnCours) {
+        if (!sautEnCours) { //si pas de saut en cours on commence l'algo
             compteurSaut = 0;
             sautEnCours = true;
             doitSauter = true;
         }
-            
         break;
     case 27:
       exit(0);
@@ -128,11 +205,16 @@ static void mouse_motion(int x, int y) {
     int viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
 
-    abscisse = (static_cast<float>(x) / viewport[2]);
-    abscisse -= 0.5;
-    abscisse *= 2;
-    std::cout <<"x "<< abscisse  << std::endl;
+    //abscisse = (static_cast<float>(x) / viewport[2]);
+    //abscisse -= 0.5;
+    //abscisse *= 2;
+    //std::cout <<"x "<< abscisse  << std::endl;
     
+    //si on clique sur la souris alors il saute
+    if (sortEnCours == false && enVie) {
+        sortEnCours = true;
+        obj[sort].tr.translation = obj[0].tr.translation;
+    }
     
     //std::cout << viewport[2] << std::endl;
 }
@@ -183,114 +265,270 @@ static void special_up_callback(int key, int,int)
   }
 }
 
+static void deplacementPerso() {
+    cam.tr.rotation_center = obj[0].tr.translation;
+    float dL = 1.0f;
+
+    vec3 t = obj[0].tr.translation;
+    vec3 suiviCamera = obj[0].tr.translation;
+    vec2 vectDeplacement = vec2(dL * cos(cam.tr.rotation_euler.y), dL * sin(cam.tr.rotation_euler.y));
+    //Mouvement du personnage en fonction de la caméra
+
+    if (flecheHaut == true) {
+        t.z -= vectDeplacement.x;
+        t.x += vectDeplacement.y;
+        if (flecheDroite == true) {
+            obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + 3 * M_PI / 4;
+            t.z += vectDeplacement.y / sqrt(2);
+            t.x += vectDeplacement.x / sqrt(2);
+        }
+        else if (flecheGauche == true) {
+            obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y - 3 * M_PI / 4;
+            t.z -= vectDeplacement.y / sqrt(2);
+            t.x -= vectDeplacement.x / sqrt(2);
+        }
+        else {
+            obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + M_PI;
+        }
+
+    }
+    if (flecheBas == true) {
+        t.z += vectDeplacement.x;
+        t.x -= vectDeplacement.y;
+        if (flecheDroite == true) {
+            obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + M_PI / 4;
+            t.z += vectDeplacement.y / sqrt(2);
+            t.x += vectDeplacement.x / sqrt(2);
+        }
+        else if (flecheGauche == true) {
+            obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y - M_PI / 4;
+            t.z -= vectDeplacement.y / sqrt(2);
+            t.x -= vectDeplacement.x / sqrt(2);
+        }
+        else {
+            obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y;
+        }
+    }
+    if (flecheGauche == true && flecheHaut == false && flecheBas == false) {
+
+        t.z -= vectDeplacement.y;
+        t.x -= vectDeplacement.x;
+        obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y - M_PI / 2;
+    }
+
+
+    if (flecheDroite == true && flecheHaut == false && flecheBas == false) {
+        t.z += vectDeplacement.y;
+        t.x += vectDeplacement.x;
+        obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + M_PI / 2;
+    }
+
+    int i = 0;
+    //vérifier s'il rencontre un arbre 
+    while (numArbres[i] != -500) {
+        if (norm(t - obj[numArbres[i]].tr.translation) < 1.8) {
+            autoriserDeplacement = false;
+        }
+        i++;
+    }
+
+    i = 0;
+    //vérifier s'il sort du terrain
+    if (abs(t.x) > 250 || abs(t.z) > 250) {
+        autoriserDeplacement = false;
+    }
+
+    
+    if (autoriserDeplacement == true) {
+        obj[0].tr.translation = t;
+    }
+
+    
+    //offset de la caméra pur le voir par derrière 
+    suiviCamera.z += 6;
+    suiviCamera.y += 1;
+
+   
+    cam.tr.translation = suiviCamera;
+   
+    /////////////////////////////////////////////
+    //SAUT
+    ////////////////////////////////////////
+
+    if (doitSauter && autoriserDeplacement) {
+        obj[0].tr.translation.y = -0.5 * 3* 9.8 * compteurSaut * compteurSaut + 10 * compteurSaut; //équation du saut
+        if (obj[0].tr.translation.y - obj[1].tr.translation.y < 0 ) {
+            obj[0].tr.translation.y = 0;
+            sautEnCours = false;
+            doitSauter = false;
+        }
+    }
+
+    
+
+    autoriserDeplacement = true;
+    
+}
+/*******************************************************/
+//detraqueur
+/******************************************************/
+static void deplacementMonstres() {
+    int i = 0;
+    compteurDetra = 0;
+    while (numDetraqueur[i] != -500) {
+        
+        if (obj[numDetraqueur[i]].tr.translation.x != -700) { //si le détraqueur n'est pas mort 
+            compteurDetra++;
+            testDetraqueur(i);//on test s'il meurt ou tue 
+            //coordonnée du monstre
+            float x = obj[numDetraqueur[i]].tr.translation.x;
+            float y = obj[numDetraqueur[i]].tr.translation.z;
+            //distance qu'il lui reste à parcourir pour atteindre un objectif
+            float varx = depDetraqueurx[i] - x;
+            float vary = depDetraqueury[i] - y; 
+
+
+            //detection de s'il touche un autre monste => n'a pas abouti
+            bool pasBouger = false;
+            int j = 0;
+            while (numDetraqueur[j] != -500) {
+                if ((norm(obj[numDetraqueur[j]].tr.translation - obj[numDetraqueur[i]].tr.translation) < 2) && (i != j)) {
+                    pasBouger = true;
+                }
+                j++;
+            }
+            j = 0;
+
+            //création d'un comportement si le jouer est dans un rayon de détection 
+            if (norm(obj[0].tr.translation - obj[numDetraqueur[i]].tr.translation) < 20) {
+                //Le monstre se dirige vers nous
+                depDetraqueurx[i] = obj[0].tr.translation.x;
+                depDetraqueury[i] = obj[0].tr.translation.z;
+                varx = depDetraqueurx[i] - x;
+                vary = depDetraqueury[i] - y; //rayon
+
+                //déplacement
+                obj[numDetraqueur[i]].tr.translation.x += 0.3 * varx / abs(varx);
+                obj[numDetraqueur[i]].tr.translation.z += 0.3 * vary / abs(vary);
+            }
+            else { //déplacement aléatoire
+
+                if (abs(vary) > 0.3 && abs(varx) > 0.3) { //s'il n'a pas atteint son objectif, il bouge
+
+                    obj[numDetraqueur[i]].tr.translation.x += 0.3 * varx / abs(varx);
+                    obj[numDetraqueur[i]].tr.translation.z += 0.3 * vary / abs(vary);
+
+                }
+                else {
+                    //création de coordonnée aléatoire dans un certain rayon 
+                    float randx = (rand() % 21) - 10;
+                    float randy = (rand() % 21) - 10;
+
+                    //ne pas autoriser les déplacements en deshors de la zone
+                    if (abs(x + randx) < 250 || abs(y + randy) < 250) {
+                        depDetraqueurx[i] = x + randx;
+                        depDetraqueury[i] = y + randy;
+                        
+                    }
+
+                }
+
+                
+            }
+
+
+
+
+
+            pasBouger = false;
+            i++;
+        }
+        else {
+            i++;
+        }
+        
+        
+        //
+    }
+    //création d'une victoire (bug)
+    std::cout << "Il reste "<<compteurDetra<<"à tuer" << std::endl;
+    if (compteurDetra == 0) {
+        std::cout << "Vous avez gagné" << std::endl;
+        exit(1);
+   }
+}
+
+/*GESTION SORTILEGE*/
+
+static void deplacementSort() {
+    //le sortilège suit la caméra
+    float dL = 0.8;
+    float posY = obj[sort].tr.translation.z;
+    float posX = obj[sort].tr.translation.x;
+    float rotSort = obj[sort].tr.rotation_euler.y;
+
+    vec2 vectDeplacement = vec2(dL * cos(cam.tr.rotation_euler.y), dL * sin(cam.tr.rotation_euler.y));
+
+   
+
+    posY -= vectDeplacement.x;
+    posX += vectDeplacement.y;
+    rotSort = -cam.tr.rotation_euler.y + M_PI;
+
+    
+
+    obj[sort].tr.translation.z = posY;
+    obj[sort].tr.translation.x = posX;
+    obj[sort].tr.rotation_euler.y = rotSort;
+    
+
+}
+
+/*Mort du personnage*/
+
+static void mourrir() {
+    obj[0].tr.rotation_euler.z = M_PI / 2;
+    enVie = false;
+}
+
+/*Test mortalité du détraqueur*/
+static void testDetraqueur(int i) {
+    //détraqueur meurt
+    if (norm(obj[numDetraqueur[i]].tr.translation - obj[sort].tr.translation) < 10) {
+        obj[numDetraqueur[i]].tr.translation.x = -700;
+
+    }
+    //détraqueur tue
+
+    if (norm(obj[numDetraqueur[i]].tr.translation - obj[0].tr.translation) < 2) {
+        mourrir();
+
+    }
+}
 
 /*****************************************************************************\
 * timer_callback                                                              *
 \*****************************************************************************/
 static void timer_callback(int)
 {
-  cam.tr.rotation_center = obj[0].tr.translation;
-  float dL=0.1f;
+    if (enVie) { //si on est en vie, on peut se déplacer 
+        deplacementPerso();
+  }
   
-  vec3 t = obj[0].tr.translation;
-  vec3 suiviCamera = obj[0].tr.translation;
-  vec2 vectDeplacement = vec2(dL * cos(cam.tr.rotation_euler.y), dL * sin(cam.tr.rotation_euler.y));
-  //Mouvement du personnage
-
-  if (flecheHaut == true) {
-      t.z -= vectDeplacement.x;
-      t.x += vectDeplacement.y;
-      if (flecheDroite == true) {
-          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + 3* M_PI/4;
-          t.z += vectDeplacement.y;
-          t.x += vectDeplacement.x;
-      }
-      else if(flecheGauche == true) {
-          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y -3*M_PI / 4;
-          t.z -= vectDeplacement.y;
-          t.x -= vectDeplacement.x;
+  deplacementMonstres();
+  if (sortEnCours == true) {
+      if (norm(obj[0].tr.translation - obj[sort].tr.translation) < 20) { // si le sort s'éloigne d'un certain rayon du magicien, il disparaît
+          deplacementSort();
       }
       else {
-          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + M_PI;
+          obj[sort].tr.translation = vec3(-1000, -1000, -1000);
+          sortEnCours = false;
       }
       
   }
-    
-
-  if (flecheBas == true) {
-      t.z += vectDeplacement.x;
-      t.x -= vectDeplacement.y;
-      if (flecheDroite == true) {
-          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + M_PI / 4;
-          t.z += vectDeplacement.y;
-          t.x += vectDeplacement.x;
-      }
-      else if (flecheGauche == true) {
-          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y  -  M_PI / 4;
-          t.z -= vectDeplacement.y;
-          t.x -= vectDeplacement.x;
-      }
-      else {
-          obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y;
-      }
-  }
-    
-
-  if (flecheGauche == true && flecheHaut == false && flecheBas == false) {
-      
-      t.z -= vectDeplacement.y;
-      t.x -= vectDeplacement.x;
-      obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y  -M_PI/2 ;
-  }
-    
-
-    if (flecheDroite == true && flecheHaut==false && flecheBas == false) {
-        t.z += vectDeplacement.y;
-        t.x += vectDeplacement.x;
-        obj[0].tr.rotation_euler.y = -cam.tr.rotation_euler.y + M_PI / 2;
-  }
-    
-
-  if(norm(t - obj[2].tr.translation) > 0.8)
-    obj[0].tr.translation = t;
-
-  suiviCamera.z += 6;
-  suiviCamera.y += 1;
-
-
-  cam.tr.translation = suiviCamera;
-
-  /////////////////////////////////////////////
-  //SAUT
-  ////////////////////////////////////////
-
-  if (doitSauter) {
-      std::cout << compteurSaut<< std::endl;
-      obj[0].tr.translation.y = -0.5 * 9.8 * compteurSaut * compteurSaut + 5 * compteurSaut;
-      if (obj[0].tr.translation.y - obj[1].tr.translation.y < 0) {
-          obj[0].tr.translation.y = 0;
-          sautEnCours = false;
-          doitSauter = false;
-
-
-      }
-  }
-
-
-
-
-  //cam.tr.rotation_euler = obj[0].tr.rotation_euler;  pour suivre perso
-
  
-  //cam.tr.rotation_euler = suiviCameraRotation ;
   //demande de rappel de cette fonction dans 25ms
   glutTimerFunc(25, timer_callback, 0);
-
-  //std::cout << obj[0].tr.translation.y - obj[1].tr.translation.y << std::endl;
-  //std::cout << norm(obj[0].tr.translation - obj[2].tr.translation) << std::endl;
-
-
-
   glutSpecialFunc(special_callback);
   glutPostRedisplay();
 
@@ -502,7 +740,7 @@ void init_model_1()
   obj[0].visible = true;
   obj[0].prog = shader_program_id;
 
-  obj[0].tr.translation = vec3(-2.0, 0.000, -10.0);
+  obj[0].tr.translation = vec3(-2.0, 0.0f, -10.0);
 
   obj[0].tr.rotation_euler = vec3(0.0f, 0.0f , 0.0f);
 }
@@ -511,12 +749,14 @@ void init_model_2()
 {
 
   mesh m;
-
+  int s = 2;
   //coordonnees geometriques des sommets
-  vec3 p0=vec3(-250.0f,0.0f,-250.0f);
-  vec3 p1=vec3( 250.0f,0.0f,-250.0f);
-  vec3 p2=vec3( 25.00f,0.0f, 250.0f);
-  vec3 p3=vec3(-250.0f,0.0f, 250.0f);
+  vec3 p0=vec3(-s*250.0f,0.0f,-s*250.0f);
+  vec3 p1=vec3( s*250.0f,0.0f,-s*250.0f);
+  vec3 p2=vec3( s*250.00f,0.0f, s*250.0f);
+  vec3 p3=vec3(-s*250.0f,0.0f, s*250.0f);
+
+ 
 
   //normales pour chaque sommet
   vec3 n0=vec3(0.0f,1.0f,0.0f);
@@ -530,23 +770,35 @@ void init_model_2()
   vec3 c2=c0;
   vec3 c3=c0;
 
+
   //texture du sommet
   vec2 t0=vec2(0.0f,0.0f);
   vec2 t1=vec2(1.0f,0.0f);
   vec2 t2=vec2(1.0f,1.0f);
   vec2 t3=vec2(0.0f,1.0f);
 
+
+
   vertex_opengl v0=vertex_opengl(p0,n0,c0,t0);
   vertex_opengl v1=vertex_opengl(p1,n1,c1,t1);
   vertex_opengl v2=vertex_opengl(p2,n2,c2,t2);
   vertex_opengl v3=vertex_opengl(p3,n3,c3,t3);
 
+  
   m.vertex = {v0, v1, v2, v3};
 
   //indice des triangles
   triangle_index tri0=triangle_index(0,1,2);
   triangle_index tri1=triangle_index(0,2,3);  
-  m.connectivity = {tri0, tri1};
+
+  //mur
+  triangle_index tri2 = triangle_index(0, 4, 1);
+  triangle_index tri3 = triangle_index(1, 5, 4);
+
+  triangle_index tri4 = triangle_index(1, 5, 2);
+  triangle_index tri5 = triangle_index(2, 6, 5);
+
+  m.connectivity = {tri0, tri1, tri2, tri3, tri4, tri5};
 
   obj[1].nb_triangle = 2;
   obj[1].vao = upload_mesh_to_gpu(m);
@@ -555,10 +807,11 @@ void init_model_2()
 
   obj[1].visible = true;
   obj[1].prog = shader_program_id;
+  
 }
 
 
-void init_model_3()
+void init_model_3(int premier, vec2* coord, int nbr)
 {
   // Chargement d'un maillage a partir d'un fichier
     mesh m = load_obj_file("data/Dementor.obj");
@@ -573,21 +826,129 @@ void init_model_3()
   //apply_deformation(&m,matrice_rotation(M_PI,0.0f,1.0f,0.0f));
   apply_deformation(&m,transform);
 
+  int num;
+  int i = 0;
+  for (num = premier; num < nbr + premier; num++) {
+      obj[num].tr.rotation_center = vec3(0.0f, 0.0f, 0.0f);
 
-  obj[2].tr.rotation_center = vec3(0.0f, 0.0f, 0.0f);
+      update_normals(&m);
+      fill_color(&m, vec3(1.0f, 1.0f, 1.0f));
+      
+      obj[num].vao = upload_mesh_to_gpu(m);
 
-  update_normals(&m);
-  fill_color(&m,vec3(1.0f,1.0f,1.0f));
+      obj[num].nb_triangle = m.connectivity.size();
+      obj[num].texture_id = glhelper::load_texture("data/textures/Tex_0075_0.png");
 
-  obj[2].vao = upload_mesh_to_gpu(m);
+      obj[num].visible = true;
+      obj[num].prog = shader_program_id;
+      
+      obj[num].tr.translation = vec3(coord[num - premier].x, 1.5, coord[num - premier].y);
 
-  obj[2].nb_triangle = m.connectivity.size();
-  obj[2].texture_id = glhelper::load_texture("data/textures/Tex_0075_0.png");
+      numDetraqueur[i] = num;
 
-  obj[2].visible = true;
-  obj[2].prog = shader_program_id;
+      depDetraqueurx[i] = obj[num].tr.translation.x;
+      depDetraqueury[i] = obj[num].tr.translation.z;
+      i++;
+      
+  }
+  numDetraqueur[i] = -500;
+  
+}
 
-  obj[2].tr.translation = vec3(2.5, 1.5, -10.0);
+
+void init_model_4(int premier, vec2 *coord, int nbr)
+{
+    // Chargement d'un maillage a partir d'un fichier
+    mesh m = load_obj_file("data/arbre.obj");
+
+    // Affecte une transformation sur les sommets du maillage
+    float s = 0.20f;
+    mat4 transform = mat4(s, 0.0f, 0.0f, 0.0f,
+        0.0f, s, 0.0f, 0.50f,
+        0.0f, 0.0f, s, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f);
+    //apply_deformation(&m,matrice_rotation(M_PI/2.0f,1.0f,0.0f,0.0f));
+    //apply_deformation(&m,matrice_rotation(M_PI,0.0f,1.0f,0.0f));
+    apply_deformation(&m, transform);
+
+    int num; 
+    int i = 0;
+    for (num = premier; num < nbr + premier-1; num++) {
+    
+        obj[num].tr.rotation_center = vec3(0.0f, 0.0f, 0.0f);
+
+        update_normals(&m);
+        fill_color(&m, vec3(1.0f, 1.0f, 1.0f));
+
+        obj[num].vao = upload_mesh_to_gpu(m);
+
+        obj[num].nb_triangle = m.connectivity.size();
+        obj[num].texture_id = glhelper::load_texture("data/source/maple_tree/textures/sugar_maple_leaf_baseColor.png");
+
+        obj[num].visible = true;
+        obj[num].prog = shader_program_id;
+        //std::cout << coord[num - premier].x << std::endl;
+        obj[num].tr.translation = vec3(coord[num - premier].x, -1.15f, coord[num - premier].y);
+        
+        numArbres[i] = num;
+        i++;
+
+    }
+    
+    numArbres[i] = -500;
+
+}
 
 
+void init_model_5(int nombre)
+{
+
+    mesh m;
+
+    //coordonnees geometriques des sommets
+    vec3 p0 = vec3(-1.0f, 0.2f, 0.0f);
+    vec3 p1 = vec3(1.0f, 0.2f, 0.0f);
+    vec3 p2 = vec3(0.00f, 2.2f, 0.0f);
+    
+
+    //normales pour chaque sommet
+    vec3 n0 = vec3(0.0f, 1.0f, 0.0f);
+    vec3 n1 = n0;
+    vec3 n2 = n0;
+   
+
+    //couleur pour chaque sommet
+    vec3 c0 = vec3(1.0f, 1.0f, 1.0f);
+    vec3 c1 = c0;
+    vec3 c2 = c0;
+    
+
+    //texture du sommet
+    vec2 t0 = vec2(0.0f, 0.0f);
+    vec2 t1 = vec2(1.0f, 0.0f);
+    vec2 t2 = vec2(1.0f, 1.0f);
+    
+
+    vertex_opengl v0 = vertex_opengl(p0, n0, c0, t0);
+    vertex_opengl v1 = vertex_opengl(p1, n1, c1, t1);
+    vertex_opengl v2 = vertex_opengl(p2, n2, c2, t2);
+    //vertex_opengl v3 = vertex_opengl(p3, n3, c3, t3);
+
+    m.vertex = { v0, v1, v2 };
+
+    //indice des triangles
+    triangle_index tri0 = triangle_index(0, 1, 2);
+    //triangle_index tri1 = triangle_index(0, 2, 3);
+    m.connectivity = { tri0 };
+
+    obj[nombre].nb_triangle = 2;
+    obj[nombre].vao = upload_mesh_to_gpu(m);
+
+    obj[nombre].texture_id = glhelper::load_texture("data/white.png");
+
+    obj[nombre].visible = true;
+    obj[nombre].prog = shader_program_id;
+    sort = nombre;
+    obj[nombre].tr.translation = vec3(-1000, -1000, -1000);
+    //std::cout << "alleeed quand meme"  << std::endl;
 }

@@ -70,6 +70,14 @@ void draw_text(const text* const t);
 
 void init_model_1();
 void init_model_2();
-void init_model_3();
 
+void init_model_3(int premier, vec2* coord, int nbr);
+void init_model_4(int premier, vec2* coord, int nbr);
 void draw_obj3d(const objet3d* const obj, camera cam);
+void init_model_5(int nombre);
+
+static void deplacementPerso();
+static void deplacementMonstres();
+static void deplacementSort();
+static void mourrir();
+static void testDetraqueur(int i);
